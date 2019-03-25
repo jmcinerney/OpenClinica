@@ -182,7 +182,7 @@ public class StudyBuildServiceImpl implements StudyBuildService {
             if (StringUtils.isEmpty(studyEnvUuid))
                 return studyEnvUuidProcessed;
         }
-        updateStudyUserRoles(request, ub, userActiveStudyId, studyEnvUuid, false);
+        //updateStudyUserRoles(request, ub, userActiveStudyId, studyEnvUuid, false);
 
         StudyDAO studyDAO = new StudyDAO(dataSource);
         StudyBean currentPublicStudy = studyDAO.findByStudyEnvUuid(studyEnvUuid);
@@ -243,7 +243,7 @@ public class StudyBuildServiceImpl implements StudyBuildService {
 
         if (studyEnvUuidProcessed)
             return true;
-        studyUserRoleUpdated = updateStudyUserRoles(request, ub, userActiveStudyId, null, isLogin);
+/*        studyUserRoleUpdated = updateStudyUserRoles(request, ub, userActiveStudyId, null, isLogin);
         if (ub.getActiveStudy() == null) {
             logger.error("There are no studies or this user has no studies avaiable");
             throw new CustomRuntimeException("There are no studies or this user has no studies avaiable", null);
@@ -253,7 +253,8 @@ public class StudyBuildServiceImpl implements StudyBuildService {
         if (studyUserRoleUpdated) {
             return true;
         } else
-            return false;
+            return false;*/
+        return true;
     }
 
     private void removeDeletedUserRoles(ArrayList<StudyUserRole> modifiedStudyUserRoles, Collection<StudyUserRole> existingStudyUserRoles) {
@@ -438,7 +439,7 @@ public class StudyBuildServiceImpl implements StudyBuildService {
         Study study = studyDao.findByOcOID(studyOid);
         if (study.getStudy() != null)
             study = study.getStudy();
-        persistparticipateModuleStatus(accessToken, study);
+        //persistparticipateModuleStatus(accessToken, study);
     }
 
 

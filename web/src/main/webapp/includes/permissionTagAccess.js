@@ -6,14 +6,9 @@ $(document).ready(function() {
         var studyEventId = getParameterByName("studyEventId", href);
         console.log("ecId:" + ecId);
         event.preventDefault();
-        validateResourceAccess(ecId, formLayoutId, studyEventId).done(function(data){
-            if (data.status == true) {
-                console.log("In promise:" + data.status);
-                location.href = href;
-            } else {
-                alert("You don't have permission to perform this action. Please contact your administrator if you think you have received this message in error.");
-            }
-        });
+
+        location.href = href;
+
     });
 });
 function getParameterByName(name, url) {

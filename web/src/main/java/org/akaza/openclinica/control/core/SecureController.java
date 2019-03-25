@@ -1501,7 +1501,7 @@ public abstract class SecureController extends HttpServlet implements SingleThre
             return isRenewAuth;
         }
 
-        studyService.updateStudyUserRoles(request, studyService.getUserAccountObject(ub), tmpPublicStudy.getId(), studyEnvUuid, false);
+        //studyService.updateStudyUserRoles(request, studyService.getUserAccountObject(ub), tmpPublicStudy.getId(), studyEnvUuid, false);
         UserAccountDAO userAccountDAO = new UserAccountDAO(sm.getDataSource());
 
         ArrayList userRoleBeans = (ArrayList) userAccountDAO.findAllRolesByUserName(ub.getName());

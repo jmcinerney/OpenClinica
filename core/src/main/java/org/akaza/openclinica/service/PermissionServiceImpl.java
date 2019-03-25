@@ -83,7 +83,7 @@ public class PermissionServiceImpl implements PermissionService {
                 roles.getBody().stream().filter(o -> (StringUtils.equals(o.getStudyEnvironmentUuid(), uuId) ||
                         (StringUtils.isNotEmpty(study.getStudyEnvSiteUuid()) && checkStudyUuid(o.getStudyEnvironmentUuid(), study.getParentStudyId())))).findFirst();
 
-        if (!dto.isPresent()) {
+/*        if (!dto.isPresent()) {
             logger.error("Study:" + uuId + " not found for this user");
             return new ArrayList<>();
         }
@@ -92,7 +92,9 @@ public class PermissionServiceImpl implements PermissionService {
         if (CollectionUtils.isEmpty(dto.get().getPermissions())) {
             return new ArrayList<>();
         }
-        List<String> tagIds = dto.get().getPermissions().stream().map(PermissionDTO::getTagId).collect(Collectors.toList());
+        List<String> tagIds = dto.get().getPermissions().stream().map(PermissionDTO::getTagId).collect(Collectors.toList());*/
+        List <String> tagIds = new ArrayList<String>();
+        tagIds.add("");
         return tagIds;
     }
 
