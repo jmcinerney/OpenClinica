@@ -162,12 +162,8 @@ public class ChangeStudyServlet extends SecureController {
 
     protected void populateCustomUserRoles(CustomRole customRole, String username) {
         List<ChangeStudyDTO> byUser = getStudyDao().findByUser(username);
-        List<StudyEnvironmentRoleDTO> userRoles = (List<StudyEnvironmentRoleDTO>) session.getAttribute("allUserRoles");
-        if (userRoles == null) {
-            logger.error("******************userRoles should not be null");
-            ResponseEntity<List<StudyEnvironmentRoleDTO>> responseEntity = getStudyBuildService().getUserRoles(request, true);
-            userRoles = responseEntity.getBody();
-        }
+        ResponseEntity<List<StudyEnvironmentRoleDTO>> responseEntity = getStudyBuildService().getUserRoles(request, true);
+        List<StudyEnvironmentRoleDTO>  userRoles = responseEntity.getBody();
         if (byUser == null) {
             logger.error("byUser variable should not be null for username:" + username);
         }
@@ -202,7 +198,7 @@ public class ChangeStudyServlet extends SecureController {
         Study newPublicStudy = getStudyDao().findByStudyEnvUuid(studyEnvUuid);
         request.setAttribute("changeStudySchema", newStudySchema);
         request.setAttribute("requestSchema",newStudySchema);
-        Study newStudy = getStudyDao().findByStudyEnvUuid(studyEnvUuid);
+        Study newStudy = getStudyDao().findStudyWithSPVByStudyEnvUuid(studyEnvUuid);
         getCurrentBoardUrl(newStudy, session);
 
         request.setAttribute("changeStudySchema", null);

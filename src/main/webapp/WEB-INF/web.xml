@@ -78,7 +78,6 @@
         <filter-name>localeFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
-
     <filter>
         <filter-name>compressFilter</filter-name>
         <filter-class>net.sf.ehcache.constructs.web.filter.GzipFilter</filter-class>
@@ -459,11 +458,6 @@
         <servlet-class>org.akaza.openclinica.control.managestudy.NoAccessServlet</servlet-class>
     </servlet>
     <servlet>
-        <display-name>ListEventDefinition</display-name>
-        <servlet-name>ListEventDefinitionServlet</servlet-name>
-        <servlet-class>org.akaza.openclinica.control.managestudy.ListEventDefinitionServlet</servlet-class>
-    </servlet>
-    <servlet>
         <display-name>ViewEventDefinition</display-name>
         <servlet-name>ViewEventDefinitionServlet</servlet-name>
         <servlet-class>org.akaza.openclinica.control.managestudy.ViewEventDefinitionServlet</servlet-class>
@@ -543,6 +537,11 @@
         <display-name>CreateDiscrepancyNote</display-name>
         <servlet-name>CreateDiscrepancyNoteServlet</servlet-name>
         <servlet-class>org.akaza.openclinica.control.submit.CreateDiscrepancyNoteServlet</servlet-class>
+    </servlet>
+    <servlet>
+        <display-name>ViewDiscrepancyNote</display-name>
+        <servlet-name>ViewDiscrepancyNoteServlet</servlet-name>
+        <servlet-class>org.akaza.openclinica.control.submit.ViewDiscrepancyNoteServlet</servlet-class>
     </servlet>
 
     <!-- Export Excel -->
@@ -778,7 +777,7 @@
         <servlet-name>ImportCRFDataServlet</servlet-name>
         <servlet-class>org.akaza.openclinica.control.submit.ImportCRFDataServlet</servlet-class>
     </servlet>
-    
+
     <servlet>
         <display-name>uploadCRFData</display-name>
         <servlet-name>uploadCRFDataToHttpServerServlet</servlet-name>
@@ -813,12 +812,6 @@
         <display-name>DownloadRuleSetXml</display-name>
         <servlet-name>DownloadRuleSetXmlServlet</servlet-name>
         <servlet-class>org.akaza.openclinica.control.submit.DownloadRuleSetXmlServlet</servlet-class>
-    </servlet>
-
-    <servlet>
-        <display-name>ViewRuleAssignment</display-name>
-        <servlet-name>ViewRuleAssignmentServlet</servlet-name>
-        <servlet-class>org.akaza.openclinica.control.submit.ViewRuleAssignmentServlet</servlet-class>
     </servlet>
 
     <servlet>
@@ -1008,11 +1001,6 @@
     </servlet-mapping>
 
     <servlet-mapping>
-        <servlet-name>ViewRuleAssignmentServlet</servlet-name>
-        <url-pattern>/ViewRuleAssignmentNew</url-pattern>
-    </servlet-mapping>
-
-    <servlet-mapping>
         <servlet-name>DownloadRuleSetXmlServlet</servlet-name>
         <url-pattern>/DownloadRuleSetXml</url-pattern>
     </servlet-mapping>
@@ -1061,8 +1049,8 @@
         <servlet-name>ImportCRFDataServlet</servlet-name>
         <url-pattern>/ImportCRFData</url-pattern>
     </servlet-mapping>
-    
-      <servlet-mapping>
+
+    <servlet-mapping>
         <servlet-name>uploadCRFDataToHttpServerServlet</servlet-name>
         <url-pattern>/UploadCRFData</url-pattern>
     </servlet-mapping>
@@ -1174,10 +1162,6 @@
     <servlet-mapping>
         <servlet-name>NoAccessServlet</servlet-name>
         <url-pattern>/NoAccess</url-pattern>
-    </servlet-mapping>
-    <servlet-mapping>
-        <servlet-name>ListEventDefinitionServlet</servlet-name>
-        <url-pattern>/ListEventDefinition</url-pattern>
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>AdminSystemServlet</servlet-name>
@@ -1342,7 +1326,8 @@
     <servlet-mapping>
         <servlet-name>ViewStudySubjectAuditLogServlet</servlet-name>
         <url-pattern>/ViewStudySubjectAuditLog</url-pattern>
-    </servlet-mapping>]
+    </servlet-mapping>
+    ]
     <servlet-mapping>
         <servlet-name>UploadDicomServlet</servlet-name>
         <url-pattern>/Dicom</url-pattern>
@@ -1354,6 +1339,10 @@
     <servlet-mapping>
         <servlet-name>CreateDiscrepancyNoteServlet</servlet-name>
         <url-pattern>/CreateDiscrepancyNote</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ViewDiscrepancyNoteServlet</servlet-name>
+        <url-pattern>/ViewDiscrepancyNote</url-pattern>
     </servlet-mapping>
 
     <!--  Export Excel -->
@@ -1475,7 +1464,6 @@
     <error-page>
         <error-code>403</error-code>
         <location>/WEB-INF/jsp/403.jsp</location>
-
     </error-page>
     <error-page>
         <error-code>500</error-code>
@@ -1546,5 +1534,13 @@
         <servlet-name>ReportsServlet</servlet-name>
         <url-pattern>/reports</url-pattern>
     </servlet-mapping>
-
+    <servlet>
+        <display-name>InvalidStateCookieWarning</display-name>
+        <servlet-name>InvalidStateCookieWarningServlet</servlet-name>
+        <servlet-class>org.akaza.openclinica.control.login.InvalidStateCookieWarningServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>InvalidStateCookieWarningServlet</servlet-name>
+        <url-pattern>/InvalidStateCookieWarning</url-pattern>
+    </servlet-mapping>
 </web-app>

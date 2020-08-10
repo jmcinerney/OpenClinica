@@ -57,6 +57,9 @@ import core.org.akaza.openclinica.service.rule.RuleSetServiceInterface;
 import core.org.akaza.openclinica.web.restful.data.bean.BaseStudyDefinitionBean;
 import core.org.akaza.openclinica.web.restful.data.validator.CRFDataImportValidator;
 import org.akaza.openclinica.domain.enumsupport.EventCrfWorkflowStatusEnum;
+import org.akaza.openclinica.service.CsvFileConverterServiceImpl;
+import org.akaza.openclinica.service.ExcelFileConverterServiceImpl;
+import org.akaza.openclinica.service.SasFileConverterServiceImpl;
 import org.checkerframework.checker.units.qual.A;
 import org.exolab.castor.mapping.Mapping;
 import org.exolab.castor.xml.Unmarshaller;
@@ -113,6 +116,16 @@ public class DataController {
 
     @Autowired
     private StudyBuildService studyBuildService;
+
+    @Autowired
+    SasFileConverterServiceImpl sasFileConverterService;
+
+    @Autowired
+    ExcelFileConverterServiceImpl excelFileConverterService;
+
+    @Autowired
+    CsvFileConverterServiceImpl csvFileConverterService;
+
     private RestfulServiceHelper serviceHelper;
     protected UserAccountBean userBean;
     private ImportDataResponseSuccessDTO responseSuccessDTO;
@@ -203,10 +216,12 @@ public class DataController {
      */
     protected synchronized ArrayList<ErrorMessage> importDataInTransaction(String importXml, HttpServletRequest request) throws Exception {
         ResourceBundleProvider.updateLocale(new Locale("en_US"));
+        ResourceBundle respage = ResourceBundleProvider.getPageMessagesBundle();
+        ResourceBundle resWords= ResourceBundleProvider.getWordsBundle();
         ArrayList<ErrorMessage> errorMsgs = new ArrayList<ErrorMessage>();
         
         Enumeration<String> headerNames = request.getHeaderNames();
-
+        boolean isLogUpdated = false;
      /*   if (headerNames != null) {
                 while (headerNames.hasMoreElements()) {
                         System.out.println("Header: " + request.getHeader(headerNames.nextElement()));
@@ -313,6 +328,7 @@ public class DataController {
                 errors.reject(e.getErrorCode(), e.getMessage());
                 
                 // log error into file
+                isLogUpdated = true;
                 SubjectDataBean subjectDataBean = odmContainer.getCrfDataPostImportContainer().getSubjectData().get(0);
                 String participantId = subjectDataBean == null ? null : subjectDataBean.getStudySubjectID();
                 
@@ -322,8 +338,7 @@ public class DataController {
             		recordNum = originalFileName.substring(originalFileName.lastIndexOf("_")+1,originalFileName.indexOf("."));
             		originalFileName = originalFileName.substring(0, originalFileName.lastIndexOf("_"));
             	}
-            	String msg = e.getErrorCode() + ":" + e.getMessage();
-            	msg = recordNum + "|" + participantId + "|FAILED|" + msg;
+            	String msg = recordNum + "," + participantId + ",FAILED," + e.getMessage();
 	    		this.dataImportService.getImportCRFDataService().getPipeDelimitedDataHelper().writeToMatchAndSkipLog(originalFileName, msg,request);
             }
 
@@ -349,8 +364,7 @@ public class DataController {
                 List<String> errorMessagesFromValidation = null;
                 String comeFromPipe = (String) request.getHeader("PIPETEXT");
             	if(comeFromPipe!=null && comeFromPipe.equals("PIPETEXT")) {
-            		;
-            	}else {
+            		}else {
             		 errorMessagesFromValidation = dataImportService.validateMetaData(odmContainer, dataSource, coreResources, studyBean, userBean,
                              displayItemBeanWrappers, importedCRFStatuses);
 
@@ -365,6 +379,7 @@ public class DataController {
                     /**
                      * log error into log file 
                      */
+                    isLogUpdated = true;
                   String participantId = odmContainer.getCrfDataPostImportContainer().getSubjectData().get(0).getStudySubjectID();
                     String originalFileName = request.getHeader("originalFileName");
                 	// sample file name like:originalFileName_123.txt,pipe_delimited_local_skip_2.txt
@@ -373,8 +388,7 @@ public class DataController {
                 		recordNum = originalFileName.substring(originalFileName.lastIndexOf("_")+1,originalFileName.indexOf("."));
                 		originalFileName = originalFileName.substring(0, originalFileName.lastIndexOf("_"));
                 	}
-                	String msg = "errorCode.ValidationFailed:" + err_msg;
-                	msg = recordNum + "|" + participantId + "|FAILED|" + msg;
+                	String msg = recordNum + "," + participantId + ",FAILED," + err_msg;
     	    		this.dataImportService.getImportCRFDataService().getPipeDelimitedDataHelper().writeToMatchAndSkipLog(originalFileName, msg,request);
     	    		
                     return errorMsgs;
@@ -402,6 +416,7 @@ public class DataController {
                   /**
                    * log error into log file
                    */
+                  isLogUpdated = true;
                   String participantId = odmContainer.getCrfDataPostImportContainer().getSubjectData().get(0).getStudySubjectID();
                   String originalFileName = request.getHeader("originalFileName");
                 	// sample file name like:originalFileName_123.txt,pipe_delimited_local_skip_2.txt
@@ -410,19 +425,8 @@ public class DataController {
                 		recordNum = originalFileName.substring(originalFileName.lastIndexOf("_")+1,originalFileName.indexOf("."));
                 		originalFileName = originalFileName.substring(0, originalFileName.lastIndexOf("_"));
                 	}
-                	// for skip err_msg:1|SS_SITE_SB1|SUCCESS|Skip
-                	String msg = null;
-                	if(err_msg.indexOf("SUCCESS|Skip") > -1) {
-                		msg = err_msg;
-                	}else {
-                		if(err_msg != null && err_msg.startsWith("errorCode.")) {
-                			msg = err_msg;
-                		}else {
-                			msg = "errorCode.ValidationFailed:" + err_msg;
-                		}
-                		
-                    	msg = recordNum + "|" + participantId + "|FAILED|" + msg;
-                	}
+                	// for skip err_msg:1,SS_SITE_SB1,SUCCESS,Skip
+                	String msg = recordNum + "," + participantId + ",FAILED," + err_msg;
                 	
     	    		this.dataImportService.getImportCRFDataService().getPipeDelimitedDataHelper().writeToMatchAndSkipLog(originalFileName, msg,request);    	    		    	    		
                     return errorMsgs;
@@ -465,7 +469,7 @@ public class DataController {
 
                 /**
                  *  Now it's time to log successful message into log file                      
-                 */ 
+                 */
                 String participantId = odmContainer.getCrfDataPostImportContainer().getSubjectData().get(0).getStudySubjectID();
                 String originalFileName = request.getHeader("originalFileName");
             	// sample file name like:originalFileName_123.txt,pipe_delimited_local_skip_2.txt
@@ -474,8 +478,8 @@ public class DataController {
             		recordNum = originalFileName.substring(originalFileName.lastIndexOf("_")+1,originalFileName.indexOf("."));
             		originalFileName = originalFileName.substring(0, originalFileName.lastIndexOf("_"));
             	}
-            	String msg = "imported";
-            	msg = recordNum + "|" + participantId + "|SUCCESS|" + msg;
+            	isLogUpdated = true;
+            	String msg = recordNum + "," + participantId + ",SUCCESS," + resWords.getString("imported");
 	    		this.dataImportService.getImportCRFDataService().getPipeDelimitedDataHelper().writeToMatchAndSkipLog(originalFileName, msg,request);
 	    	
                 ImportCRFInfoContainer importCrfInfo = new ImportCRFInfoContainer(odmContainer, dataSource, studyDao);
@@ -502,6 +506,19 @@ public class DataController {
 
         } catch (Exception e) {
             logger.error("Error processing data import request ",e );
+            if(!isLogUpdated) {
+                String participantId = request.getHeader("participantLabel");
+                String originalFileName = request.getHeader("originalFileName");
+                // sample file name like:originalFileName_123.txt,pipe_delimited_local_skip_2.txt
+                String recordNum = null;
+                if (originalFileName != null) {
+                    recordNum = originalFileName.substring(originalFileName.lastIndexOf("_") + 1, originalFileName.indexOf("."));
+                    originalFileName = originalFileName.substring(0, originalFileName.lastIndexOf("_"));
+                }
+                String msg = recordNum + "," + participantId + ",FAILED," + respage.getString("unexpected_error_occured");
+
+                this.dataImportService.getImportCRFDataService().getPipeDelimitedDataHelper().writeToMatchAndSkipLog(originalFileName, msg, request);
+            }
             throw new Exception(e);
         }
     }
@@ -575,7 +592,8 @@ public class DataController {
 
     public RestfulServiceHelper getRestfulServiceHelper() {
         if (serviceHelper == null) {
-            serviceHelper = new RestfulServiceHelper(this.dataSource, studyBuildService, studyDao);
+            serviceHelper = new RestfulServiceHelper(this.dataSource, studyBuildService, studyDao, sasFileConverterService,
+                                    excelFileConverterService, csvFileConverterService);
         }
 
         return serviceHelper;
@@ -641,11 +659,11 @@ public class DataController {
         mFiles[0] = mappingFile;
         mFiles[1] = dataFile;
         
-        String studyOID = this.getRestfulServiceHelper().getImportDataHelper().getStudyOidFromMappingFile(mappingFile);
-        getRestfulServiceHelper().setSchema(studyOID, request);
+
         
-        
-        try {       	         	  
+        try {
+            String studyOID = this.getRestfulServiceHelper().getImportDataHelper().getStudyOidFromMappingFile(mappingFile);
+            getRestfulServiceHelper().setSchema(studyOID, request);
               //only support text file
               if (mFiles[0] !=null) {
             	  boolean foundMappingFile = false;
@@ -673,16 +691,11 @@ public class DataController {
                       		mappingFileTxt = file;
                       		
                       	}else {
-                      		 
-         	 	 	 	 	 logFileName = this.getRestfulServiceHelper().buildLogFileName(file.getName());
+         	 	 	 	 	 logFileName = this.getRestfulServiceHelper().buildLogFile(file.getName(), request);
          	 	 	 	     request.setAttribute("logFileName", logFileName);
                       	}
                       }
                   }
-            	 
-            	  if(mappingFileTxt != null && logFileName !=null) {
-            		  this.getRestfulServiceHelper().getImportDataHelper().copyMappingFileToLogFile(mappingFileTxt, logFileName, request);
-            	  }
             	  
             	  if (!foundMappingFile) {            		
             		  throw new OpenClinicaSystemException("errorCode.noMappingfile", "When send files, please include one correct mapping file, named like *mapping.txt ");
