@@ -504,15 +504,18 @@ public class ListStudySubjectTableFactory extends AbstractTableFactory {
         for(DisplayStudyEventBean displayStudyEvent: displayStudyEvents) {
             StudyEventBean studyEventBean = displayStudyEvent.getStudyEvent();
 
-            if (studyEventBean.isRemoved() || studyEventBean.isArchived()
-                    || (!studyEventBean.getWorkflowStatus().equals(StudyEventWorkflowStatusEnum.NOT_SCHEDULED)
+            if (!studyEventBean.isRemoved() && !studyEventBean.isArchived()) {
+                if (!studyEventBean.getWorkflowStatus().equals(StudyEventWorkflowStatusEnum.NOT_SCHEDULED)
                         && !studyEventBean.getWorkflowStatus().equals(StudyEventWorkflowStatusEnum.SKIPPED)
                         && !studyEventBean.getWorkflowStatus().equals(StudyEventWorkflowStatusEnum.STOPPED)
-                        && !studyEventBean.getWorkflowStatus().equals(StudyEventWorkflowStatusEnum.COMPLETED)
-                    )
-                    || !displayStudyEvent.isSignAble()
-               )
-                return false;
+                        && !studyEventBean.getWorkflowStatus().equals(StudyEventWorkflowStatusEnum.COMPLETED)) {
+                    return false;
+                } else {
+                    if (!displayStudyEvent.isSignAble()) {
+                        return false;
+                    }
+                }
+            }
         }
 
         return true;
@@ -612,7 +615,8 @@ public class ListStudySubjectTableFactory extends AbstractTableFactory {
                     value = output != null ? output : value;
                 }
             }else if(property.startsWith("sed_")){
-                value = StudyEventWorkflowStatusEnum.getByI18nDescription(value)+"";
+                if (StudyEventWorkflowStatusEnum.getByI18nDescription(value) != null)
+                    value = StudyEventWorkflowStatusEnum.getByI18nDescription(value) + "";
             }
             auditUserLoginFilter.addFilter(property, value);
         }
@@ -903,8 +907,13 @@ public class ListStudySubjectTableFactory extends AbstractTableFactory {
             List<StudyEventWorkflowStatusEnum> eventWorkflowStatuses = new ArrayList<>(Arrays.asList(StudyEventWorkflowStatusEnum.values()));
 
             for (StudyEventWorkflowStatusEnum workflow : eventWorkflowStatuses) {
-                options.add(new Option(workflow.getDisplayValue(),workflow.getDisplayValue()));
+                if (!workflow.equals(StudyEventWorkflowStatusEnum.NOT_SCHEDULED))
+                    options.add(new Option(workflow.getDisplayValue(), workflow.getDisplayValue()));
             }
+            options.add(new Option(resterms.getString(LOCKED.toLowerCase()),resterms.getString(LOCKED.toLowerCase())));
+            options.add(new Option(resterms.getString(NOT_LOCKED.toLowerCase()),resterms.getString(NOT_LOCKED.toLowerCase())));
+            options.add(new Option(resterms.getString(SIGNED.toLowerCase()),resterms.getString(SIGNED.toLowerCase())));
+            options.add(new Option(resterms.getString(NOT_SIGNED.toLowerCase()),resterms.getString(NOT_SIGNED.toLowerCase())));
             return options;
         }
     }

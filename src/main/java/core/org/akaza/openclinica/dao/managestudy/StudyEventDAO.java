@@ -209,6 +209,14 @@ public class StudyEventDAO extends AuditableEntityDAO implements Listener {
         if (!StringUtils.isEmpty(workflow)) {
             eb.setWorkflowStatus((StudyEventWorkflowStatusEnum) StudyEventWorkflowStatusEnum.valueOf(workflow));
         }
+        Boolean removed = (Boolean) hm.get("removed");
+        Boolean archived = (Boolean) hm.get("archived");
+        Boolean locked = (Boolean) hm.get("locked");
+        Boolean signed = (Boolean) hm.get("signed");
+        eb.setRemoved(removed);
+        eb.setArchived(archived);
+        eb.setLocked(locked);
+        eb.setSigned(signed);
 
         // YW 08-17-2007
         eb.setStartTimeFlag((Boolean) hm.get("start_time_flag"));
@@ -644,7 +652,10 @@ public class StudyEventDAO extends AuditableEntityDAO implements Listener {
             if (oldStudyEventBean.getDateStarted() != null && sb.getDateStarted() != null)
                 if (oldStudyEventBean.getDateStarted().compareTo(sb.getDateStarted()) != 0)
                     changeDetails.setStartDateChanged(true);
-            if (!oldStudyEventBean.getWorkflowStatus().equals(sb.getWorkflowStatus()))
+            if (!oldStudyEventBean.getWorkflowStatus().equals(sb.getWorkflowStatus())
+                    || oldStudyEventBean.isLocked() != sb.isLocked()
+                    || oldStudyEventBean.isSigned() != sb.isSigned()
+            )
                 changeDetails.setStatusChanged(true);
             changeDetails.setRunningInTransaction(isTransaction);
             StudyEventBeanContainer container = new StudyEventBeanContainer(sb, changeDetails);

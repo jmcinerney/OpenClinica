@@ -24,6 +24,7 @@ import core.org.akaza.openclinica.domain.user.UserAccount;
 import core.org.akaza.openclinica.service.crfdata.ErrorObj;
 import org.akaza.openclinica.web.restful.errors.ErrorConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -744,13 +745,9 @@ public class ImportServiceImpl implements ImportService {
     }
 
     private ErrorObj validateForReal(String value) {
-        try {
-            Double.parseDouble(value);
-        } catch (NumberFormatException nfe) {
-            logger.error("Unable to parse real value", nfe);
-            return new ErrorObj(FAILED, ErrorConstants.ERR_VALUE_TYPE_MISMATCH);
-        }
-        return null;
+        if(NumberUtils.isParsable(value))
+            return null;
+        return new ErrorObj(FAILED, ErrorConstants.ERR_VALUE_TYPE_MISMATCH);
     }
 
     private ErrorObj validateForDate(String value) {
@@ -926,26 +923,9 @@ public class ImportServiceImpl implements ImportService {
                     studyEventDataBean.setStudyEventRepeatKey(String.valueOf(studyEvent.getSampleOrdinal()));
                     return studyEvent;
                 } else {
-                	// Repeat Key, if found in xml file, then use it
-                	if (studyEventDataBean.getStudyEventRepeatKey() != null && !studyEventDataBean.getStudyEventRepeatKey().equals("")) {   
-                		eventObject = validateEventRepeatKeyIntNumber(studyEventDataBean.getStudyEventRepeatKey());
-                        if (eventObject instanceof ErrorObj) return eventObject;                                      		              	
-                	}else {
-                		studyEventDataBean.setStudyEventRepeatKey(String.valueOf(eventOrdinal));  
-                	}
-                    
-                	//check blank event                	 
-                     studyEvent = studyEventDao.fetchByStudyEventDefOIDAndOrdinal(studyEventDataBean.getStudyEventOID(), Integer.parseInt(studyEventDataBean.getStudyEventRepeatKey()), studySubject.getStudySubjectId());
 
-                     ErrorObj errorObj = checkEventAvailable(studyEvent);
-                     if (errorObj != null) {
-                         return errorObj;
-                     }
-                     
-                     if(studyEvent !=null){
-                    	 return studyEvent;
-                     }
-                	
+                		studyEventDataBean.setStudyEventRepeatKey(String.valueOf(eventOrdinal));
+
                     studyEvent = scheduleEvent(studyEventDataBean, studySubject, studyEventDefinition, userAccount);
                     return studyEvent;
                 }
@@ -1558,7 +1538,11 @@ public class ImportServiceImpl implements ImportService {
         if (formDataBean.getWorkflowStatus() == null) {
             formDataBean.setWorkflowStatus(EventCrfWorkflowStatusEnum.INITIAL_DATA_ENTRY);
         }
-
+        if(!formDataBean.getWorkflowStatus().equals(EventCrfWorkflowStatusEnum.INITIAL_DATA_ENTRY)
+                && !formDataBean.getWorkflowStatus().equals(EventCrfWorkflowStatusEnum.COMPLETED)){
+            return new ErrorObj(FAILED, ErrorConstants.ERR_FORM_STATUS_NOT_VALID);
+        }
+        
         return formLayout;
     }
 

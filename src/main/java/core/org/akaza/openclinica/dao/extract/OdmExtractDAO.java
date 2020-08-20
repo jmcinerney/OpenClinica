@@ -339,7 +339,8 @@ public class OdmExtractDAO extends DatasetDAO {
             this.setTypeExpected(34, TypeNames.DATE);// date_interviewed
             this.setTypeExpected(35, TypeNames.STRING);// interviewer_name
             this.setTypeExpected(36, TypeNames.INT);// validator_id
-            this.setTypeExpected(37, TypeNames.STRING);// definition_name;
+            this.setTypeExpected(37, TypeNames.STRING);// sdv_status;
+            this.setTypeExpected(38, TypeNames.STRING);// definition_name;
         }
     }
 
@@ -3141,9 +3142,9 @@ public class OdmExtractDAO extends DatasetDAO {
                 if (dataset.isShowSubjectGender()) {
                     sub.setSubjectGender((String) row.get("gender"));
                 }
-                if (dataset.isShowSubjectStatus()) {
-                    sub.setStatus(Status.get((Integer) row.get("status_id")).getName());
-                }
+
+                sub.setStatus(Status.get((Integer) row.get("status_id")).getName());
+
                 // ------ finish adding openclinica subject attributes
 
                 // ------ add openclinica subject_group
