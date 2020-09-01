@@ -7,23 +7,30 @@ import core.org.akaza.openclinica.dao.extract.ArchivedDatasetFileDAO;
 import core.org.akaza.openclinica.dao.hibernate.StudyDao;
 import core.org.akaza.openclinica.domain.enumsupport.JobStatus;
 import core.org.akaza.openclinica.service.UtilService;
+import core.org.akaza.openclinica.web.util.ErrorConstants;
+import core.org.akaza.openclinica.web.util.HeaderUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.akaza.openclinica.controller.dto.ScheduledExtractJobDetailDTO;
 import org.apache.http.entity.ContentType;
-import org.quartz.*;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.HttpHeaders;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 
 @Controller
@@ -42,37 +49,44 @@ public class ScheduledExtractController {
     @Autowired
     private ArchivedDatasetFileDAO archivedDatasetFileDAO;
 
+    private static final String ENTITY_NAME = "ScheduledExtractController";
 
-    @ApiOperation(value = "To get latest scheduled extract dataset ids and creation time for the job name at study level", notes = "only work for authorized users with the right access permission")
+
+    @ApiOperation(value = "To get list of latest scheduled extract job execution UUIDs and creation time",
+            notes = "Requires authentication and permission to access the dataset extracted by the job. " +
+                    "Returns a list of job execution UUIDs and creation times for the job specified by the job UUID. " +
+                    "A job execution UUID can be used to retrieve the file resulting from that job execution. Job UUIDs " +
+                    "can be found on the “View Job” page in your OpenClinica. The job can be configured to keep up to 10 execution files. ")
     @RequestMapping(value = "/extractJobs/{jobUuid}/jobExecutions", method = RequestMethod.GET)
-    public @ResponseBody
-    ResponseEntity<Object> getScheduledExtractJobDatasetIdsAndCreationTime(@PathVariable("jobUuid") String jobUuid,
-                                                                           HttpServletRequest request,
-                                                                           HttpServletResponse response) throws SchedulerException {
+    public ResponseEntity<List<ScheduledExtractJobDetailDTO>> getScheduledExtractJobDatasetIdsAndCreationTime(@PathVariable("jobUuid") String jobUuid,
+                                                                                                              HttpServletRequest request,
+                                                                                                              HttpServletResponse response) throws SchedulerException {
+
         UserAccountBean userAccountBean = utilService.getUserAccountFromRequest(request);
         if (!userAccountBean.isSysAdmin() && !userAccountBean.isTechAdmin()) {
-            String errorMessage = errorHelper("User must be type admin.", response);
-            return new ResponseEntity<>(errorMessage, org.springframework.http.HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, ErrorConstants.ERR_NO_SUFFICIENT_PRIVILEGES,
+                    "User must be type admin.")).body(null);
         }
 
-        ArrayList<ArchivedDatasetFileBean> archivedDatasetFileBeans = archivedDatasetFileDAO.findByJobUuid(jobUuid);
+        ArrayList<ArchivedDatasetFileBean> archivedDatasetFileBeans = archivedDatasetFileDAO.findByJobUuid(jobUuid.trim());
 
         if (archivedDatasetFileBeans.size() == 0) {
-            String errorMessage = errorHelper("No content found for job Uuid: " + jobUuid + ".", response);
-            return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
+            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, ErrorConstants.ERR_MISSING_FILE,
+                    "No content found for job Uuid: " + jobUuid + ".")).body(null);
         }
 
-        String output = "";
+        List<ScheduledExtractJobDetailDTO> scheduledExtractJobDetailDTOList = new ArrayList<>();
         for (ArchivedDatasetFileBean adfb : archivedDatasetFileBeans) {
             if (adfb.getStatus().equals(JobStatus.COMPLETED.name()) && !adfb.getFileReference().isEmpty())
-                output += " Dataset Id: " + adfb.getJobExecutionUuid() + "  Date Created: " + adfb.getDateCreated() + "\n";
+                scheduledExtractJobDetailDTOList.add(convertEntityToDTO(adfb));
         }
 
-        return new ResponseEntity<>("Extract files for job name " + jobUuid + ": \n" + output, HttpStatus.OK);
+        return new ResponseEntity<>(scheduledExtractJobDetailDTOList, HttpStatus.OK);
     }
 
 
-    @ApiOperation(value = "To get latest scheduled extract dataset ids and creation time for the job name at study level", notes = "only work for authorized users with the right access permission")
+    @ApiOperation(value = "To get extract file for a given job execution UUID", notes = "Requires authentication and permission to access the dataset " +
+            "extracted by the job. Retrieves the dataset file produced by the job execution determined by UUID.")
     @RequestMapping(value = "/extractJobs/jobExecutions/{jobExecutionUuid}/dataset", method = RequestMethod.GET)
     public @ResponseBody
     ResponseEntity<Object> getScheduledExtract(@PathVariable("jobExecutionUuid") String jobExecutionUuid,
@@ -112,6 +126,13 @@ public class ScheduledExtractController {
         logger.debug(errorMessage);
         response.setContentLength(errorMessage.length());
         return errorMessage;
+    }
+
+    private ScheduledExtractJobDetailDTO convertEntityToDTO(ArchivedDatasetFileBean archivedDatasetFileBean) {
+        ScheduledExtractJobDetailDTO scheduledExtractJobDetailDTO = new ScheduledExtractJobDetailDTO();
+        scheduledExtractJobDetailDTO.setDateCreated(archivedDatasetFileBean.getDateCreated());
+        scheduledExtractJobDetailDTO.setJobExecutionUuid(archivedDatasetFileBean.getJobExecutionUuid());
+        return scheduledExtractJobDetailDTO;
     }
 
 }
