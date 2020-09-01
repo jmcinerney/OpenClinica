@@ -120,26 +120,15 @@ public class RandomizationServiceImpl implements RandomizationService {
 
                 });
 
-        // if the study config is not in the existing map, then remove it
-        // Don't need to do anything crazy with thread safety here as this end point is very restricted and not multi-tenant
-        // Need to cycle through and clean out everything for this study event UUID
-        //TODO Is there really a reason to do this and not just wipe everything out?
-/*        randomizationMap.entrySet().stream().forEach(entry->{
-            if (results.get(entry.getValue().getConfiguration().getStudyOID()) == null) {
-                randomizationMap.remove(entry.getKey());
-            }
-        });*/
+        // Clear the configuration map and re-build it.
         randomizationMap = new ConcurrentHashMap<>();
 
-        // Build a new key? Instead of just studyEnvUuid
-        // Do? studyEnvUuid-eventOid-formOid
-        // Issue with this is how do we remove existing ones where the eventOid has changed?
         randomizationConfigurations.stream().forEach(config->{
             if (randomizationMap.containsKey(config.getStudyEnvUuid())){
-                // Add to existing
+                // Add to existing entry.
                 randomizationMap.get(config.getStudyEnvUuid()).addConfiguration(config);
             } else {
-                // Create new
+                // Doesn't exist, add as new.
                 randomizationMap.put(config.getStudyEnvUuid(), new RandomizationData(true, config));
             }
         });
