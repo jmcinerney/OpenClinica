@@ -43,26 +43,25 @@ public class FormCacheServiceImpl {
 
     // TODO Currently we are adding a form to the cache when it is opened through the participant's details page.
     public void addEditFormToFormCache(String ecId, EventCrf eventCrf){
-/*        FormChangeDTO formChangeDTO = kafkaService.constructFormChangeDTO(eventCrf);
-        expiringMap.put(ecId, new FormChangeListener(formChangeDTO, kafkaService));*/
+        FormChangeDTO formChangeDTO = kafkaService.constructFormChangeDTO(eventCrf);
+        expiringMap.put(ecId, new FormChangeListener(formChangeDTO, kafkaService));
     }
 
     public void addNewFormToFormCache(String ecId, Study currentStudy, StudyEvent studyEvent, FormLayout formLayout) {
-/*        FormChangeDTO formChangeDTO = kafkaService.constructNewFormChangeDTO(currentStudy, studyEvent, formLayout);
-        expiringMap.put(ecId, new FormChangeListener(formChangeDTO, kafkaService));*/
+        FormChangeDTO formChangeDTO = kafkaService.constructNewFormChangeDTO(currentStudy, studyEvent, formLayout);
+        expiringMap.put(ecId, new FormChangeListener(formChangeDTO, kafkaService));
     }
 
     public boolean resetExpiration(String ecId){
-/*        boolean successfullyReset = expiringMap.containsKey(ecId);
+        boolean successfullyReset = expiringMap.containsKey(ecId);
         reportContentsOfMap();
         expiringMap.resetExpiration(ecId);
         reportContentsOfMap();
-        return successfullyReset;*/
-        return true;
+        return successfullyReset;
     }
 
     public boolean expireAndRemoveForm(String ecId){
-/*        boolean successfullyRemoved;
+        boolean successfullyRemoved;
         if (expiringMap.containsKey(ecId)){
             reportContentsOfMap();
             expiringMap.get(ecId).expired(null, null);
@@ -73,15 +72,14 @@ public class FormCacheServiceImpl {
         else {
             successfullyRemoved = false;
         }
-        return successfullyRemoved;*/
-        return true;
+        return successfullyRemoved;
     }
 
     public void reportContentsOfMap(){
-/*        logger.info("Reporting contents of map...");
+        logger.info("Reporting contents of map...");
         for (ExpiringMap.Entry<String, FormChangeListener> entry : expiringMap.entrySet()){
             logger.info("Entry: " + entry.getKey() + " : " + expiringMap.getExpectedExpiration(entry.getKey()));
-        }*/
+        }
     }
 
 }

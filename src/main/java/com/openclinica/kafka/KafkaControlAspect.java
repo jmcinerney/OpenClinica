@@ -30,13 +30,15 @@ public class KafkaControlAspect {
 
     @Around("execution(* com.openclinica.kafka.KafkaService.*Message(..))")
     public void isKafkaEnabled(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        //TODO This is not working...
+        proceedingJoinPoint.proceed();
+/*        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         Study study = (Study) requestAttributes.getRequest().getSession().getAttribute("study");
         StudyParameterValue studyCalendarParameterValue = study.getIndividualStudyParameterValue(StudyParamNames.STUDY_CALENDAR);
         if (studyCalendarParameterValue != null){
             String studyCalendarStatus = study.getIndividualStudyParameterValue(StudyParamNames.STUDY_CALENDAR).getValue();
             if (ModuleStatus.isActive(studyCalendarStatus)){
                 proceedingJoinPoint.proceed();}
-        }
+        }*/
     }
 }

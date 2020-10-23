@@ -114,7 +114,6 @@ public class ModulesConfigurationConfig {
                 logger.error("No studies configured or Randomize  startup configuration failed.");
             }
 /*
-
             logger.info("Calling Randomize service to initialize configuration.");
             Map<String, String> configMap = new HashMap<>();
             boolean isSuccess = false;
